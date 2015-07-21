@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
  
 #include <SDL/SDL.h>
 
@@ -10,18 +11,175 @@
 #define CUADRO_CENTRAL_POSX 132
 #define CUADRO_CENTRAL_POSY 52
 
-#define CUADROS_TABLERO 16
+#define NUMERO_CUADROS 21
+#define TAMANO_CUADROS_TABLERO 16
 #define SEPARACION 2
 
 SDL_Surface *screen;
+int Piezas [21][5][5] = 
+	{ 
+		{ {1,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {1,1,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {1,1,0,0,0},
+		  {0,1,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		
+		{ {1,1,1,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {1,1,0,0,0},
+		  {1,1,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {0,1,0,0,0},
+		  {1,1,1,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {1,1,1,1,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {0,0,1,0,0},
+		  {1,1,1,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {0,1,1,0,0},
+		  {1,1,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {1,0,0,0,0},
+		  {1,1,1,1,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {0,1,0,0,0},
+		  {0,1,0,0,0},
+		  {1,1,1,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {1,0,0,0,0},
+		  {1,0,0,0,0},
+		  {1,1,1,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {0,1,1,1,0},
+		  {1,1,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		
+		{ {0,0,1,0,0},
+		  {1,1,1,0,0},
+		  {1,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {1,0,0,0,0},
+		  {1,0,0,0,0},
+		  {1,0,0,0,0},
+		  {1,0,0,0,0},
+		  {1,0,0,0,0} },
+		  
+		{ {1,0,0,0,0},
+		  {1,1,0,0,0},
+		  {1,1,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {0,1,1,0,0},
+		  {1,1,0,0,0},
+		  {1,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {1,1,0,0,0},
+		  {1,0,0,0,0},
+		  {1,1,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {0,1,1,0,0},
+		  {1,1,0,0,0},
+		  {0,1,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {0,1,0,0,0},
+		  {1,1,1,0,0},
+		  {0,1,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+		  
+		{ {0,1,0,0,0},
+		  {1,1,1,1,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0},
+		  {0,0,0,0,0} },
+	};
 
 void Setup (void);
 void DibujarTablero (void);
+void DibujarPieza (int posY, int posX, int pieza[5][5]);
 
 int main (int argc, char *argv[])
 {
+	srand(time(NULL)); 
     Setup ();
     DibujarTablero();
+    
+    DibujarPieza (0, 0, Piezas [0]);
+    DibujarPieza (0, 2, Piezas [1]);
+    DibujarPieza (0, 5, Piezas [2]);
+    DibujarPieza (0, 8, Piezas [3]);
+    ////////////////////////////////
+    DibujarPieza (3, 0, Piezas [4]);
+    DibujarPieza (3, 3, Piezas [5]);
+    DibujarPieza (3, 7, Piezas [6]);
+    DibujarPieza (3, 12, Piezas [7]);
+    DibujarPieza (3, 16, Piezas [8]);
+    ////////////////////////////////
+    DibujarPieza (6, 0, Piezas [9]);
+    DibujarPieza (6, 5, Piezas [10]);
+    DibujarPieza (6, 9, Piezas [11]);
+    DibujarPieza (6, 13, Piezas [12]);
+    DibujarPieza (6, 18, Piezas [13]);
+    ////////////////////////////////
+    DibujarPieza (10, 0, Piezas [14]);
+    DibujarPieza (10, 2, Piezas [15]);
+    DibujarPieza (10, 5, Piezas [16]);
+    DibujarPieza (10, 9, Piezas [17]);
+    DibujarPieza (10, 12, Piezas [18]);
+    DibujarPieza (10, 16, Piezas [19]);
+    ////////////////////////////////
+    DibujarPieza (16, 0, Piezas [20]);
     
     SDL_Flip (screen);
     /* Variable para recibir eventos */
@@ -61,7 +219,7 @@ void Setup (void) {
 }
 
 void DibujarTablero (void) {
-	SDL_Rect rect;	
+	SDL_Rect rect;
 	
 	/* Fondo Gris */
 	rect.x = rect.y = 0;
@@ -75,31 +233,41 @@ void DibujarTablero (void) {
 	SDL_FillRect (screen, &rect, SDL_MapRGB(screen->format,0xE8, 0xE8, 0xE8));
 	
 	int i, j;
-	for (i = 0; i < 21; i += 1)
+	for (i = 0; i < NUMERO_CUADROS; i += 1)
 	{
-		for (j = 0; j < 21; j += 1)
+		for (j = 0; j < NUMERO_CUADROS; j += 1)
 		{
-			rect.x = CUADRO_CENTRAL_POSX + (CUADROS_TABLERO + SEPARACION) * j;
-			rect.y = CUADRO_CENTRAL_POSY + (CUADROS_TABLERO + SEPARACION) * i;
-			rect.w = rect.h = CUADROS_TABLERO;
+			rect.x = CUADRO_CENTRAL_POSX + (TAMANO_CUADROS_TABLERO + SEPARACION) * j;
+			rect.y = CUADRO_CENTRAL_POSY + (TAMANO_CUADROS_TABLERO + SEPARACION) * i;
+			rect.w = rect.h = TAMANO_CUADROS_TABLERO;
 			SDL_FillRect (screen, &rect, SDL_MapRGB(screen->format,0xFF, 0xFF, 0xFF));
 		}
 	}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+void DibujarPieza (int posY, int posX, int pieza[5][5]) {
+	SDL_Rect rect;
+	int ladoPieza = 5;
+	int color[] = {(int)(254.0*rand()/(RAND_MAX+1.0)), (int)(254.0*rand()/(RAND_MAX+1.0)), (int)(254.0*rand()/(RAND_MAX+1.0))};
+	
+	posX = CUADRO_CENTRAL_POSX+(TAMANO_CUADROS_TABLERO+SEPARACION)*posX;
+	posY = CUADRO_CENTRAL_POSY+(TAMANO_CUADROS_TABLERO+SEPARACION)*posY;
+	
+	int i, j;
+	for (i = 0; i < ladoPieza; i += 1)
+	{
+		for (j = 0; j < ladoPieza; j += 1)
+		{
+			if(pieza[i][j] == 1)
+			{
+				rect.x = posX + (TAMANO_CUADROS_TABLERO + SEPARACION) * j;
+				rect.y = posY + (TAMANO_CUADROS_TABLERO + SEPARACION) * i;
+				rect.w = rect.h = TAMANO_CUADROS_TABLERO;
+				SDL_FillRect (screen, &rect, SDL_MapRGB(screen->format, color[0], color[1], color[2]));
+			}
+		}
+	}
+}
 
 
 
