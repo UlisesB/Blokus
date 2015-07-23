@@ -15,6 +15,8 @@
 #define TAMANO_CUADROS_TABLERO 16
 #define SEPARACION 2
 
+#define MATRIZ_PIEZA 5
+
 SDL_Surface *screen;
 int Piezas [21][5][5] = 
 	{ 
@@ -148,51 +150,62 @@ int Piezas [21][5][5] =
 void Setup (void);
 void DibujarTablero (void);
 void DibujarPieza (int posY, int posX, int pieza[5][5]);
+int ValidarPieza (int posY, int posX, int pieza[5][5]);
 
 int main (int argc, char *argv[])
 {
+	int posY, posX, piezaRandom;
 	srand(time(NULL)); 
     Setup ();
     DibujarTablero();
     
-    DibujarPieza (0, 0, Piezas [0]);
-    DibujarPieza (0, 2, Piezas [1]);
-    DibujarPieza (0, 5, Piezas [2]);
-    DibujarPieza (0, 8, Piezas [3]);
-    ////////////////////////////////
-    DibujarPieza (3, 0, Piezas [4]);
-    DibujarPieza (3, 3, Piezas [5]);
-    DibujarPieza (3, 7, Piezas [6]);
-    DibujarPieza (3, 12, Piezas [7]);
-    DibujarPieza (3, 16, Piezas [8]);
-    ////////////////////////////////
-    DibujarPieza (6, 0, Piezas [9]);
-    DibujarPieza (6, 5, Piezas [10]);
-    DibujarPieza (6, 9, Piezas [11]);
-    DibujarPieza (6, 13, Piezas [12]);
-    DibujarPieza (6, 18, Piezas [13]);
-    ////////////////////////////////
-    DibujarPieza (10, 0, Piezas [14]);
-    DibujarPieza (10, 2, Piezas [15]);
-    DibujarPieza (10, 5, Piezas [16]);
-    DibujarPieza (10, 9, Piezas [17]);
-    DibujarPieza (10, 12, Piezas [18]);
-    DibujarPieza (10, 16, Piezas [19]);
-    ////////////////////////////////
-    DibujarPieza (16, 0, Piezas [20]);
-    
-    SDL_Flip (screen);
     /* Variable para recibir eventos */
     SDL_Event evento;
- 
+	
+	piezaRandom = (int)(20.0*rand()/(RAND_MAX+1.0));
+	
     do {
-        while (SDL_WaitEvent(&evento)) {
-            /* Si el evento es de salida, pues, salir */
-            if (evento.type == SDL_QUIT) {
-                return 0;
-            }
-        }
-    } while (1);
+		while (SDL_PollEvent (&evento)) {
+			DibujarTablero();
+			switch (evento.type) {
+				case SDL_QUIT:
+					return 0;
+					break;
+				case SDL_KEYDOWN:
+					switch(evento.key.keysym.sym) {
+						case SDLK_LEFT:
+							piezaRandom = (piezaRandom-1) < 0 ? 20 : (piezaRandom-1); 
+							break;
+						case SDLK_RIGHT:
+							piezaRandom = (piezaRandom+1)%21; 
+							break;
+					}
+					break;
+			}
+		}
+		SDL_GetMouseState(&posX, &posY);
+		if( posY >= CUADRO_CENTRAL_POSY && 
+			posY <= (CUADRO_CENTRAL_POSY+CUADRO_CENTRAL) &&
+			posX >= CUADRO_CENTRAL_POSX &&
+			posX <= (CUADRO_CENTRAL_POSX+CUADRO_CENTRAL)) 
+		{		
+				posY = posY - CUADRO_CENTRAL_POSY;
+				posX = posX - CUADRO_CENTRAL_POSX;
+
+				if (posY % (TAMANO_CUADROS_TABLERO+SEPARACION) < TAMANO_CUADROS_TABLERO &&
+					posX % (TAMANO_CUADROS_TABLERO+SEPARACION) < TAMANO_CUADROS_TABLERO) 
+				{
+					posY = posY/(TAMANO_CUADROS_TABLERO+SEPARACION);
+					posX = posX/(TAMANO_CUADROS_TABLERO+SEPARACION);
+					if (ValidarPieza (posY, posX, Piezas[piezaRandom])) {
+						DibujarPieza (posY, posX, Piezas [piezaRandom]);
+					}
+				}
+		}		
+
+		SDL_Flip (screen);
+		SDL_Delay (32);
+	} while (1);
  
     return 0;
 }
@@ -247,21 +260,18 @@ void DibujarTablero (void) {
 
 void DibujarPieza (int posY, int posX, int pieza[5][5]) {
 	SDL_Rect rect;
-	int ladoPieza = 5;
-	int color[] = {(int)(254.0*rand()/(RAND_MAX+1.0)), (int)(254.0*rand()/(RAND_MAX+1.0)), (int)(254.0*rand()/(RAND_MAX+1.0))};
-	
-	posX = CUADRO_CENTRAL_POSX+(TAMANO_CUADROS_TABLERO+SEPARACION)*posX;
-	posY = CUADRO_CENTRAL_POSY+(TAMANO_CUADROS_TABLERO+SEPARACION)*posY;
+	//int color[] = {(int)(254.0*rand()/(RAND_MAX+1.0)), (int)(254.0*rand()/(RAND_MAX+1.0)), (int)(254.0*rand()/(RAND_MAX+1.0))};
+	int color[] = {0, 0, 255};
 	
 	int i, j;
-	for (i = 0; i < ladoPieza; i += 1)
+	for (i = 0; i < MATRIZ_PIEZA; i += 1)
 	{
-		for (j = 0; j < ladoPieza; j += 1)
+		for (j = 0; j < MATRIZ_PIEZA; j += 1)
 		{
 			if(pieza[i][j] == 1)
 			{
-				rect.x = posX + (TAMANO_CUADROS_TABLERO + SEPARACION) * j;
-				rect.y = posY + (TAMANO_CUADROS_TABLERO + SEPARACION) * i;
+				rect.x = CUADRO_CENTRAL_POSX + ((TAMANO_CUADROS_TABLERO+SEPARACION)*posX) + ((TAMANO_CUADROS_TABLERO+SEPARACION)*j);
+				rect.y = CUADRO_CENTRAL_POSY + ((TAMANO_CUADROS_TABLERO+SEPARACION)*posY) + ((TAMANO_CUADROS_TABLERO+SEPARACION)*i);
 				rect.w = rect.h = TAMANO_CUADROS_TABLERO;
 				SDL_FillRect (screen, &rect, SDL_MapRGB(screen->format, color[0], color[1], color[2]));
 			}
@@ -269,6 +279,45 @@ void DibujarPieza (int posY, int posX, int pieza[5][5]) {
 	}
 }
 
+int ValidarPieza (int posY, int posX, int pieza[5][5]) {
+	int i, j;
+	for (i = 0; i < MATRIZ_PIEZA; i += 1)
+	{
+		for (j = 0; j < MATRIZ_PIEZA; j += 1)
+		{
+			if(pieza[i][j] == 1 && ((i+posY) >= NUMERO_CUADROS || (j+posX) >= NUMERO_CUADROS))
+			{
+				return 0;
+			}
+		}
+	}
+	return 1;
+}
 
+	/*DibujarPieza (0, 0, Piezas [0]);
+    DibujarPieza (0, 2, Piezas [1]);
+    DibujarPieza (0, 5, Piezas [2]);
+    DibujarPieza (0, 8, Piezas [3]);
+    ////////////////////////////////
+    DibujarPieza (3, 0, Piezas [4]);
+    DibujarPieza (3, 3, Piezas [5]);
+    DibujarPieza (3, 7, Piezas [6]);
+    DibujarPieza (3, 12, Piezas [7]);
+    DibujarPieza (3, 16, Piezas [8]);
+    ////////////////////////////////
+    DibujarPieza (6, 0, Piezas [9]);
+    DibujarPieza (6, 5, Piezas [10]);
+    DibujarPieza (6, 9, Piezas [11]);
+    DibujarPieza (6, 13, Piezas [12]);
+    DibujarPieza (6, 18, Piezas [13]);
+    ////////////////////////////////
+    DibujarPieza (10, 0, Piezas [14]);
+    DibujarPieza (10, 2, Piezas [15]);
+    DibujarPieza (10, 5, Piezas [16]);
+    DibujarPieza (10, 9, Piezas [17]);
+    DibujarPieza (10, 12, Piezas [18]);
+    DibujarPieza (10, 16, Piezas [19]);
+    ////////////////////////////////
+    DibujarPieza (16, 0, Piezas [20]);*/
 
 
