@@ -17,8 +17,14 @@
 
 #define MATRIZ_PIEZA 5
 
+#define VACIO 0
+#define JUGADOR_1 1
+#define JUGADOR_2 2
+
 SDL_Surface *screen;
-int Piezas [21][5][5] = 
+int EstadoTablero[NUMERO_CUADROS][NUMERO_CUADROS];
+
+int Piezas [NUMERO_CUADROS][MATRIZ_PIEZA][MATRIZ_PIEZA] = 
 	{ 
 		{ {1,0,0,0,0},
 		  {0,0,0,0,0},
@@ -149,6 +155,8 @@ int Piezas [21][5][5] =
 
 void Setup (void);
 void DibujarTablero (void);
+void DibujarEstadoTablero (void);
+void CambiarEstadoTablero (int posY, int posX, int (*)[5]);
 void DibujarPieza (int posY, int posX, int (*)[5]);
 int ValidarPieza (int posY, int posX, int (*)[5]);
 void RotarDerecha (int pieza);
@@ -160,8 +168,9 @@ void ReflejarVertical (int pieza);
 int main (int argc, char *argv[])
 {
 	int posY, posX, piezaRandom;
-	srand(time(NULL)); 
+	srand(time(NULL));
     Setup ();
+	memset(EstadoTablero, 0, sizeof(int)*NUMERO_CUADROS);
     DibujarTablero();
     
     /* Variable para recibir eventos */
@@ -170,8 +179,8 @@ int main (int argc, char *argv[])
 	piezaRandom = (int)(20.0*rand()/(RAND_MAX+1.0));
 	
     do {
+    	DibujarEstadoTablero();
 		while (SDL_PollEvent (&evento)) {
-			DibujarTablero();
 			switch (evento.type) {
 				case SDL_QUIT:
 					return 0;
@@ -184,12 +193,12 @@ int main (int argc, char *argv[])
 						case SDLK_RIGHT:
 							piezaRandom = (piezaRandom+1)%21; 
 							break;
-						case SDLK_UP:
+						/*case SDLK_UP:
 							RotarDerecha(piezaRandom);
 							break;
 						case SDLK_DOWN:
 							RotarIzquierda(piezaRandom);
-							break;
+							break;*/
 					}
 					break;
 				case SDL_MOUSEBUTTONDOWN:
@@ -206,6 +215,26 @@ int main (int argc, char *argv[])
 						case SDL_BUTTON_RIGHT:
 							ReflejarHorizontal(piezaRandom);
 							break;
+						case SDL_BUTTON_LEFT:
+							if( evento.button.y >= CUADRO_CENTRAL_POSY && 
+								evento.button.y <= (CUADRO_CENTRAL_POSY+CUADRO_CENTRAL) &&
+								evento.button.x >= CUADRO_CENTRAL_POSX &&
+								evento.button.x <= (CUADRO_CENTRAL_POSX+CUADRO_CENTRAL)) 
+							{		
+								evento.button.y = evento.button.y - CUADRO_CENTRAL_POSY;
+								evento.button.x = evento.button.x - CUADRO_CENTRAL_POSX;
+
+								if (evento.button.y % (TAMANO_CUADROS_TABLERO+SEPARACION) < TAMANO_CUADROS_TABLERO &&
+									evento.button.x % (TAMANO_CUADROS_TABLERO+SEPARACION) < TAMANO_CUADROS_TABLERO) 
+								{
+									evento.button.y = evento.button.y/(TAMANO_CUADROS_TABLERO+SEPARACION);
+									evento.button.x = evento.button.x/(TAMANO_CUADROS_TABLERO+SEPARACION);
+									if (ValidarPieza (evento.button.y, evento.button.x, Piezas[piezaRandom])) {
+										CambiarEstadoTablero(evento.button.y, evento.button.x, Piezas [piezaRandom]);
+									}
+								}
+							}
+							break;
 					}
 					break;
 			}
@@ -216,27 +245,25 @@ int main (int argc, char *argv[])
 			posX >= CUADRO_CENTRAL_POSX &&
 			posX <= (CUADRO_CENTRAL_POSX+CUADRO_CENTRAL)) 
 		{		
-				posY = posY - CUADRO_CENTRAL_POSY;
-				posX = posX - CUADRO_CENTRAL_POSX;
+			posY = posY - CUADRO_CENTRAL_POSY;
+			posX = posX - CUADRO_CENTRAL_POSX;
 
-				if (posY % (TAMANO_CUADROS_TABLERO+SEPARACION) < TAMANO_CUADROS_TABLERO &&
-					posX % (TAMANO_CUADROS_TABLERO+SEPARACION) < TAMANO_CUADROS_TABLERO) 
-				{
-					posY = posY/(TAMANO_CUADROS_TABLERO+SEPARACION);
-					posX = posX/(TAMANO_CUADROS_TABLERO+SEPARACION);
-					if (ValidarPieza (posY, posX, Piezas[piezaRandom])) {
-						DibujarPieza (posY, posX, Piezas [piezaRandom]);
-					}
+			if (posY % (TAMANO_CUADROS_TABLERO+SEPARACION) < TAMANO_CUADROS_TABLERO &&
+				posX % (TAMANO_CUADROS_TABLERO+SEPARACION) < TAMANO_CUADROS_TABLERO) 
+			{
+				posY = posY/(TAMANO_CUADROS_TABLERO+SEPARACION);
+				posX = posX/(TAMANO_CUADROS_TABLERO+SEPARACION);
+				if (ValidarPieza (posY, posX, Piezas[piezaRandom])) {
+					DibujarPieza (posY, posX, Piezas [piezaRandom]);
 				}
-		}		
-
+			}
+		}
 		SDL_Flip (screen);
 		SDL_Delay (32);
 	} while (1);
  
     return 0;
 }
-
 
 void Setup (void) {
     int depth;
@@ -270,9 +297,15 @@ void DibujarTablero (void) {
 	rect.x = CUADRO_CENTRAL_POSX;
 	rect.y = CUADRO_CENTRAL_POSY;
 	rect.w = rect.h = CUADRO_CENTRAL;
-	SDL_FillRect (screen, &rect, SDL_MapRGB(screen->format,0xE8, 0xE8, 0xE8));
-	
+	SDL_FillRect (screen, &rect, SDL_MapRGB(screen->format,0xE8, 0xE8, 0xE8));	
+}
+
+void DibujarEstadoTablero (void) {
+	SDL_Rect rect;
 	int i, j;
+	int colorJugador1[] = {0, 0, 255};
+	int colorJugador2[] = {255, 0, 0};
+	int colorVacio[] = {255, 255, 255};
 	for (i = 0; i < NUMERO_CUADROS; i += 1)
 	{
 		for (j = 0; j < NUMERO_CUADROS; j += 1)
@@ -280,7 +313,31 @@ void DibujarTablero (void) {
 			rect.x = CUADRO_CENTRAL_POSX + (TAMANO_CUADROS_TABLERO + SEPARACION) * j;
 			rect.y = CUADRO_CENTRAL_POSY + (TAMANO_CUADROS_TABLERO + SEPARACION) * i;
 			rect.w = rect.h = TAMANO_CUADROS_TABLERO;
-			SDL_FillRect (screen, &rect, SDL_MapRGB(screen->format,0xFF, 0xFF, 0xFF));
+			switch(EstadoTablero[i][j]) {
+				case VACIO:
+					SDL_FillRect (screen, &rect, SDL_MapRGB(screen->format, colorVacio[0], colorVacio[1], colorVacio[2]));
+					break;
+				case JUGADOR_1:
+					SDL_FillRect (screen, &rect, SDL_MapRGB(screen->format, colorJugador1[0], colorJugador1[1], colorJugador1[2]));
+					break;
+				case JUGADOR_2:
+					SDL_FillRect (screen, &rect, SDL_MapRGB(screen->format, colorJugador2[0], colorJugador2[1], colorJugador2[2]));
+					break;
+			}
+		}
+	}
+}
+
+void CambiarEstadoTablero (int posY, int posX, int (*pieza)[5]) {
+	int i, j;
+	for (i = 0; i < MATRIZ_PIEZA; i += 1)
+	{
+		for (j = 0; j < MATRIZ_PIEZA; j += 1)
+		{
+			if(pieza[i][j] == 1)
+			{
+				EstadoTablero[posY + i][posX + j] = JUGADOR_1;
+			}
 		}
 	}
 }
