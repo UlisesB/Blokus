@@ -149,8 +149,13 @@ int Piezas [21][5][5] =
 
 void Setup (void);
 void DibujarTablero (void);
-void DibujarPieza (int posY, int posX, int pieza[5][5]);
-int ValidarPieza (int posY, int posX, int pieza[5][5]);
+void DibujarPieza (int posY, int posX, int (*)[5]);
+int ValidarPieza (int posY, int posX, int (*)[5]);
+void RotarDerecha (int pieza);
+void RotarIzquierda (int pieza);
+void EliminarVacio(int (*)[5]);
+void ReflejarHorizontal (int pieza);
+void ReflejarVertical (int pieza);
 
 int main (int argc, char *argv[])
 {
@@ -178,6 +183,28 @@ int main (int argc, char *argv[])
 							break;
 						case SDLK_RIGHT:
 							piezaRandom = (piezaRandom+1)%21; 
+							break;
+						case SDLK_UP:
+							RotarDerecha(piezaRandom);
+							break;
+						case SDLK_DOWN:
+							RotarIzquierda(piezaRandom);
+							break;
+					}
+					break;
+				case SDL_MOUSEBUTTONDOWN:
+					switch(evento.button.button) {
+						case SDL_BUTTON_WHEELUP:
+							RotarDerecha(piezaRandom);
+							break;				
+						case SDL_BUTTON_WHEELDOWN:						
+							RotarIzquierda(piezaRandom);
+							break;
+						case SDL_BUTTON_MIDDLE:
+							ReflejarVertical(piezaRandom);
+							break;
+						case SDL_BUTTON_RIGHT:
+							ReflejarHorizontal(piezaRandom);
 							break;
 					}
 					break;
@@ -258,7 +285,7 @@ void DibujarTablero (void) {
 	}
 }
 
-void DibujarPieza (int posY, int posX, int pieza[5][5]) {
+void DibujarPieza (int posY, int posX, int (*pieza)[5]) {
 	SDL_Rect rect;
 	//int color[] = {(int)(254.0*rand()/(RAND_MAX+1.0)), (int)(254.0*rand()/(RAND_MAX+1.0)), (int)(254.0*rand()/(RAND_MAX+1.0))};
 	int color[] = {0, 0, 255};
@@ -279,7 +306,7 @@ void DibujarPieza (int posY, int posX, int pieza[5][5]) {
 	}
 }
 
-int ValidarPieza (int posY, int posX, int pieza[5][5]) {
+int ValidarPieza (int posY, int posX, int (*pieza)[5]) {
 	int i, j;
 	for (i = 0; i < MATRIZ_PIEZA; i += 1)
 	{
@@ -294,30 +321,114 @@ int ValidarPieza (int posY, int posX, int pieza[5][5]) {
 	return 1;
 }
 
-	/*DibujarPieza (0, 0, Piezas [0]);
-    DibujarPieza (0, 2, Piezas [1]);
-    DibujarPieza (0, 5, Piezas [2]);
-    DibujarPieza (0, 8, Piezas [3]);
-    ////////////////////////////////
-    DibujarPieza (3, 0, Piezas [4]);
-    DibujarPieza (3, 3, Piezas [5]);
-    DibujarPieza (3, 7, Piezas [6]);
-    DibujarPieza (3, 12, Piezas [7]);
-    DibujarPieza (3, 16, Piezas [8]);
-    ////////////////////////////////
-    DibujarPieza (6, 0, Piezas [9]);
-    DibujarPieza (6, 5, Piezas [10]);
-    DibujarPieza (6, 9, Piezas [11]);
-    DibujarPieza (6, 13, Piezas [12]);
-    DibujarPieza (6, 18, Piezas [13]);
-    ////////////////////////////////
-    DibujarPieza (10, 0, Piezas [14]);
-    DibujarPieza (10, 2, Piezas [15]);
-    DibujarPieza (10, 5, Piezas [16]);
-    DibujarPieza (10, 9, Piezas [17]);
-    DibujarPieza (10, 12, Piezas [18]);
-    DibujarPieza (10, 16, Piezas [19]);
-    ////////////////////////////////
-    DibujarPieza (16, 0, Piezas [20]);*/
+void EliminarVacios (int (*piezaRotada)[MATRIZ_PIEZA]) {
+	int i, j;
+	while(piezaRotada[0][0]+piezaRotada[1][0]+piezaRotada[2][0]+piezaRotada[3][0]+piezaRotada[4][0] == 0) {
+		for (i = 0; i < MATRIZ_PIEZA - 1; i += 1)
+		{
+			for (j = 0; j < MATRIZ_PIEZA; j += 1)
+			{
+				piezaRotada[j][i] = piezaRotada[j][i+1];
+			}
+		}
+		piezaRotada[0][4]=piezaRotada[1][4]=piezaRotada[2][4]=piezaRotada[3][4]=piezaRotada[4][4] = 0;
+	}
+	while(piezaRotada[0][0]+piezaRotada[0][1]+piezaRotada[0][2]+piezaRotada[0][3]+piezaRotada[0][4] == 0) {
+		for (i = 0; i < MATRIZ_PIEZA - 1; i += 1)
+		{
+			for (j = 0; j < MATRIZ_PIEZA; j += 1)
+			{
+				piezaRotada[i][j] = piezaRotada[i+1][j];
+			}
+		}
+		piezaRotada[4][0]=piezaRotada[4][1]=piezaRotada[4][2]=piezaRotada[4][3]=piezaRotada[4][4] = 0;
+	}
+}
+
+void ReflejarVertical (int pieza) {
+	int piezaReflejada[5][5];
+	int h = MATRIZ_PIEZA-1, i, j;
+	
+	for (i = 0; i < MATRIZ_PIEZA; i += 1)
+	{
+		for (j = 0; j < MATRIZ_PIEZA; j += 1)
+		{
+			piezaReflejada[h-i][j] = Piezas[pieza][i][j];
+		}
+	}
+	EliminarVacios(piezaReflejada);
+	for (i = 0; i < MATRIZ_PIEZA; i += 1)
+	{
+		for (j = 0; j < MATRIZ_PIEZA; j += 1)
+		{
+			Piezas[pieza][i][j] = piezaReflejada[i][j];
+		}
+	}
+}
+
+void ReflejarHorizontal (int pieza) {
+	int piezaReflejada[5][5];
+	int h = MATRIZ_PIEZA-1, i, j;
+	
+	for (i = 0; i < MATRIZ_PIEZA; i += 1)
+	{
+		for (j = 0; j < MATRIZ_PIEZA; j += 1)
+		{
+			piezaReflejada[i][h-j] = Piezas[pieza][i][j];
+		}
+	}
+	EliminarVacios(piezaReflejada);
+	for (i = 0; i < MATRIZ_PIEZA; i += 1)
+	{
+		for (j = 0; j < MATRIZ_PIEZA; j += 1)
+		{
+			Piezas[pieza][i][j] = piezaReflejada[i][j];
+		}
+	}
+}
+
+void RotarDerecha (int pieza) {
+	int piezaRotada[5][5];
+	int h = MATRIZ_PIEZA-1, i, j;
+	
+	for (i = 0; i < MATRIZ_PIEZA; i += 1)
+	{
+		for (j = 0; j < MATRIZ_PIEZA; j += 1)
+		{
+			piezaRotada[j][h] = Piezas[pieza][i][j];
+		}
+		h--;
+	}
+	EliminarVacios(piezaRotada);
+	for (i = 0; i < MATRIZ_PIEZA; i += 1)
+	{
+		for (j = 0; j < MATRIZ_PIEZA; j += 1)
+		{
+			Piezas[pieza][i][j] = piezaRotada[i][j];
+		}
+	}
+}
+
+void RotarIzquierda (int pieza) {
+	int piezaRotada[5][5];
+	int h = MATRIZ_PIEZA-1, i, j;
+	
+	for (i = 0; i < MATRIZ_PIEZA; i += 1)
+	{
+		for (j = 0; j < MATRIZ_PIEZA; j += 1)
+		{
+			piezaRotada[h-j][i] = Piezas[pieza][i][j];
+		}
+	}
+	EliminarVacios(piezaRotada);
+	for (i = 0; i < MATRIZ_PIEZA; i += 1)
+	{
+		for (j = 0; j < MATRIZ_PIEZA; j += 1)
+		{
+			Piezas[pieza][i][j] = piezaRotada[i][j];
+		}
+	}
+}
 
 
+	
