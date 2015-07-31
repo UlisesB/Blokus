@@ -231,16 +231,24 @@ int main (int argc, char *argv[])
 				case SDL_MOUSEBUTTONDOWN:
 					switch(evento.button.button) {
 						case SDL_BUTTON_WHEELUP:
-							RotarDerecha(piezaRandom);
+							if(piezaRandom != -1) {
+								RotarDerecha(piezaRandom);
+							}
 							break;				
 						case SDL_BUTTON_WHEELDOWN:						
-							RotarIzquierda(piezaRandom);
+							if(piezaRandom != -1) {
+								RotarIzquierda(piezaRandom);
+							}
 							break;
 						case SDL_BUTTON_MIDDLE:
-							ReflejarVertical(piezaRandom);
+							if(piezaRandom != -1) {
+								ReflejarVertical(piezaRandom);
+							}
 							break;
 						case SDL_BUTTON_RIGHT:
-							ReflejarHorizontal(piezaRandom);
+							if(piezaRandom != -1) {
+								ReflejarHorizontal(piezaRandom);
+							}
 							break;
 						case SDL_BUTTON_LEFT:
 							if( piezaRandom != -1 &&
@@ -416,7 +424,7 @@ void DibujarPieza (int posY, int posX, int (*pieza)[5], int valido) {
 }
 
 int ValidarPieza (int posY, int posX, int (*pieza)[5], int primera) {
-	int i, j;
+	int i, j, bandera = FALSE;
 	for (i = 0; i < MATRIZ_PIEZA; i += 1)
 	{
 		for (j = 0; j < MATRIZ_PIEZA; j += 1)
@@ -439,14 +447,20 @@ int ValidarPieza (int posY, int posX, int (*pieza)[5], int primera) {
 				return 1;//Dibuja Invalido
 			}
 			//Si hay casillas adyacentes
-			if(pieza[i][j] == PIEZA && 
-				(EstadoTablero[(posY+i)+1][(posX+j)] != VACIO || 
-				 EstadoTablero[(posY+i)-1][(posX+j)] != VACIO ||
-				 EstadoTablero[(posY+i)][(posX+j)+1] != VACIO ||
-				 EstadoTablero[(posY+i)][(posX+j)-1] != VACIO ))
-			{
-				return 1;//Dibuja Invalido
-			}			
+			if(pieza[i][j] == PIEZA) {
+				if((posY+i)+1 < NUMERO_CUADROS && (EstadoTablero[(posY+i)+1][(posX+j)] != VACIO)) {
+					return 1;
+				}
+				if((posY+i)-1 >= 0 && (EstadoTablero[(posY+i)-1][(posX+j)] != VACIO)) {
+					return 1;//Dibuja Invalido
+				}
+				if((posX+i)+1 < NUMERO_CUADROS && (EstadoTablero[(posY+i)][(posX+j)+1] != VACIO)) {
+					return 1;//Dibuja Invalido
+				}
+				if((posX+i)-1 >= 0 && (EstadoTablero[(posY+i)][(posX+j)-1] != VACIO)) {
+					return 1;//Dibuja Invalido
+				}
+			}
 		}
 	}
 
@@ -470,17 +484,28 @@ int ValidarPieza (int posY, int posX, int (*pieza)[5], int primera) {
 	} else {
 		for (i = 0; i < MATRIZ_PIEZA; i++) {
 			for (j = 0; j < MATRIZ_PIEZA; j++) {
-				//Si no hay pieza esquinada
-				if(pieza[i][j] == PIEZA && 
-					(EstadoTablero[(posY+i)+1][(posX+j)+1] == VACIO || 
-					 EstadoTablero[(posY+i)+1][(posX+j)-1] == VACIO ||
-					 EstadoTablero[(posY+i)-1][(posX+j)+1] == VACIO ||
-					 EstadoTablero[(posY+i)-1][(posX+j)-1] == VACIO )
-				  )
-				{
-					return 1;
+				//Si hay pieza esquinada, la bandera es valida
+				if(pieza[i][j] == PIEZA) {
+					if( ((posY+i)+1) < NUMERO_CUADROS && ((posX+j)+1) < NUMERO_CUADROS && (EstadoTablero[(posY+i)+1][(posX+j)+1] != VACIO) ) {
+						bandera = TRUE;
+					}
+					if( ((posY+i)+1) < NUMERO_CUADROS && ((posX+j)-1) >= 0 && (EstadoTablero[(posY+i)+1][(posX+j)-1] != VACIO) ) {
+						bandera = TRUE;
+					}				
+					if( ((posY+i)-1) >= 0 && ((posX+j)-1) >= 0 && (EstadoTablero[(posY+i)-1][(posX+j)-1] != VACIO) ) {
+						bandera = TRUE;
+					}					
+					if( ((posY+i)-1) >= 0 && ((posX+j)+1) < NUMERO_CUADROS && (EstadoTablero[(posY+i)-1][(posX+j)+1] != VACIO) ) {
+						bandera = TRUE;
+					}					
 				}
 			}
+		}
+		if (bandera) {
+			return 2;//Dibuja Valido
+		}
+		else {
+			return 1;//Dibuja Invalido
 		}
 	}
 	return 2;//Dibuja Valido
